@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather</title>
+
+
+    <style>
+        *{
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        header{
+            text-align: center;
+            font-weight: bolder;
+            box-sizing: border-box;
+            padding: 10px 20px;
+            background-color: rgba(139, 0, 0, 0.746);
+            color: white;
+            margin: 0 30%;
+            letter-spacing: 1px;
+            border-radius: 5px;
+        }
+        .city-dropdowns{
+            margin-top: 30px;
+            text-align: center;
+        }
+        .dropdown-1,.dropdown-2,compare-btn{
+            width:33%;
+            float: left;
+            text-align: center;
+        }
+        .cities{
+            padding: 10px 0px;
+            width: 80%;
+            /* border:1px solid #999; */
+            border-radius: 5px;
+            color: #999;
+        }
+        .btn{
+            background-color:rgba(0, 21, 139, 0.856);
+            color: white;
+            padding: 10px 30px;
+            /* width: 20%; */
+            letter-spacing: 1px;
+            font-weight: bold;
+            /* float: right; */
+            border-color: #999;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            /* margin-left: 5px; */
+            box-sizing: border-box;
+        }
+        .dropdown-time{
+            display: none !important;
+            /* display: block; */
+            margin: 30px 0px 0px 30px;
+            padding: 10px 20px;
+            width: 50%;
+            background-color: rgba(184, 135, 11, 0.808);
+            text-align: center;
+            border-radius: 5px;
+        }
+        .show{
+            display: block !important;
+        }
+        .temperature-desc{
+            margin: 50px;
+            font-size: larger;
+            background-color:green;
+            color: white;
+            /* padding: 20px; */
+            border-radius: 50%;
+        }
+        .temp-converter{
+            display: none;
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header>WEATHER COMPARE</header>
+
+        <div class="city-dropdowns">
+            <div class="dropdown-1">
+                <select class="cities" id="cities">
+                    <option value="">Select City</option>
+                </select>
+                <div class="dropdown-time" id="dropdown1-time"></div>
+                <div class="dropdown-time" id="dropdown1-temperature"></div>
+            </div>
+            <div class="dropdown-2">
+                <select class="cities" id="city">
+                    <option value="">Select City</option>
+                </select>
+                <div class="dropdown-time" id="dropdown2-time"></div>
+                <div class="dropdown-time" id="dropdown2-temperature"></div>
+            </div>
+            <div class="compare-btn">
+                <button class="btn" id="compareBtn">COMPARE</button>
+
+                <div class="temp-converter" id="temp-converter">
+                    
+                    <input type="radio" name="tempConvert" value="Celsius" id="celsius" checked/>
+                    <label for="celsius">Celsius</label>
+                    <input type="radio" name="tempConvert" value="Fahrenheit" id="fahrenheit"/>
+                    <label for="fahrenheit">Fahrenheit</label>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script>
+
+        var cityArray=[]
+
+        fetch('https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/countries%2Bstates%2Bcities.json')
+        .then(response=> response.json())
+        .then(json=>{
+            console.log(json)
+            cityArray=json;
+            
+            load();
+        })
+        
+        function load(){
+            for(let i=0;i<cityArray.length;i++){
+                for(let j=0;j<cityArray[i].states.length;j++){
+                    for(let k=0;k<cityArray[i].states[j].cities.length;k++){
+                        let opt=document.createElement('option');
+                        // opt.text=cityArray[i].states[j].name;
+                        // opt.value=cityArray[i].states[j].name;
+                        opt.text=cityArray[i].states[j].cities[k].name;
+                        opt.value=cityArray[i].states[j].cities[k].name;
+                        document.getElementById('cities').appendChild(opt);
+                    
+                        let temp=document.createElement('option');
+                        // temp.text=cityArray[i].states[j].name;
+                        // temp.value=cityArray[i].states[j].name;
+                        temp.text=cityArray[i].states[j].cities[k].name;
+                        temp.value=cityArray[i].states[j].cities[k].name;
+                        document.getElementById('city').appendChild(temp);
+                    }
+                }
+            }
+        }   
+
+        document.getElementById('compareBtn').addEventListener('click',function(){
+            var lon;
+            var lat;
+            let leftDropdownValue = document.getElementById('cities').selectedOptions[0].value;
+            let rightDropdownValue=document.getElementById('city').selectedOptions[0].value;
+
+
+            //  const fahrenheit = (temp * 9) / 5 + 32;
+
+            if(leftDropdownValue)
+            {
+                if(rightDropdownValue)
+                {
+                    document.querySelector('.temp-converter').style.display="block";
+                    for(let i=0;i<cityArray.length;i++){
+                        for(let j=0;j<cityArray[i].states.length;j++){
+                            for(let k=0;k<cityArray[i].states[j].cities.length;k++){
+                            
+                                //leftDropdown value
+                                if(cityArray[i].states[j].cities[k].name===leftDropdownValue){
+                                    
+                                    //Adding gmtOffsetName(GMT/UTC Time to html page)
+                                    document.querySelector('#dropdown1-time').classList.add('show');
+                                    document.getElementById("dropdown1-time").innerHTML="<span>"+
+                                        cityArray[i].timezones[0].gmtOffsetName+"</span>";
+                                    lon=cityArray[i].states[j].cities[k].longitude;
+                                    lat=cityArray[i].states[j].cities[k].latitude;
+
+                                    fetch('https://www.7timer.info/bin/astro.php?lon='+lon+'&lat='+lat+'&lang=en&ac=0&unit=metric&output=json&tzshift=0')
+                                    .then(response=> response.json())
+                                    .then(json=>{
+                                        document.querySelector('#dropdown1-temperature').classList.add('show');
+                                        document.querySelector('#dropdown1-temperature').classList.add('temperature-desc');
+                                        if(json.dataseries[0].temp2m<-5||json.dataseries[0].temp2m>20){
+                                            document.querySelector('#dropdown1-temperature').style.backgroundColor="red";
+                                        }
+
+                                        //convert of cecius
+                                        document.getElementById('celsius').addEventListener('change',function(){
+                                            // alert('celsius checked')
+                                            document.getElementById("dropdown1-temperature").innerHTML="<span>"+
+                                            json.dataseries[0].temp2m+"&#8451;</span>";
+                                            
+                                        });
+
+                                        //celsius to fahrenheit conversion
+                                        document.getElementById('fahrenheit').addEventListener('change',function(){
+                                            document.getElementById("dropdown1-temperature").innerHTML="<span>"+((json.dataseries[0].temp2m*1.8)+32)+"</span>";
+                                            
+                                        });
+                                        document.getElementById("dropdown1-temperature").innerHTML="<span>"+
+                                                json.dataseries[0].temp2m+"&#8451;</span>";
+                                        
+                                    });
+                                }
+
+                                //Right Dropdown value
+                                if(cityArray[i].states[j].cities[k].name===rightDropdownValue){
+                                    
+                                    //Adding gmtOffsetName(GMT/UTC Time to html page)
+                                    document.querySelector('#dropdown2-time').classList.add('show');
+                                    document.getElementById("dropdown2-time").innerHTML="<span>"+
+                                        cityArray[i].timezones[0].gmtOffsetName+"</span>";
+                                    lon=cityArray[i].states[j].cities[k].longitude;
+                                    lat=cityArray[i].states[j].cities[k].latitude;
+
+                                    
+                                    fetch('https://www.7timer.info/bin/astro.php?lon='+lon+'&lat='+lat+'&lang=en&ac=0&unit=metric&output=json&tzshift=0')
+                                    .then(response=> response.json())
+                                    .then(json=>{
+                                        document.querySelector('#dropdown2-temperature').classList.add('show');
+                                        document.querySelector('#dropdown2-temperature').classList.add('temperature-desc');
+                                        if( json.dataseries[0].temp2m<1 ||json.dataseries[0].temp2m>20){
+                                            document.querySelector('#dropdown1-temperature').style.backgroundColor="red";
+                                        }
+
+                                        //convert of cecius
+                                        document.getElementById('celsius').addEventListener('change',function(){
+                                            // alert('celsius checked')
+                                            document.getElementById("dropdown2-temperature").innerHTML="<span>"+
+                                            json.dataseries[0].temp2m+"&#8451;</span>";
+                                            
+                                        });
+
+                                        //celsius to fahrenheit conversion
+                                        document.getElementById('fahrenheit').addEventListener('change',function(){
+                                            document.getElementById("dropdown2-temperature").innerHTML="<span>"+((json.dataseries[0].temp2m*1.8)+32)+"</span>";
+                                        });
+
+                                        document.getElementById("dropdown2-temperature").innerHTML="<span>"+
+                                            json.dataseries[0].temp2m+"&#8451;</span>";
+
+                                        
+                                    })
+                                }   
+                            }
+                        }
+                    }  
+                }
+                else{
+                    alert('Choose one city from Second Dropdown');
+                }
+            }
+            else{
+                alert('Choose one city from First Dropdown');
+            }
+
+            
+        });
+
+    </script>
+</body>
+</html>
